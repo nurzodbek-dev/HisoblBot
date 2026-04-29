@@ -160,3 +160,19 @@ def generate_report_pdf(
     pdf.output(tmp.name)
     tmp.close()
     return tmp.name
+
+
+def generate_report_bytes(
+    summary: dict,
+    transactions: list,
+    period_label: str = "Haftalik",
+    business_name: str | None = None,
+) -> bytes:
+    """Generate a PDF report and return bytes."""
+    path = generate_report_pdf(summary, transactions, period_label, business_name)
+    try:
+        with open(path, "rb") as f:
+            return f.read()
+    finally:
+        if os.path.exists(path):
+            os.unlink(path)
