@@ -4,7 +4,7 @@ import os
 import tempfile
 from datetime import datetime
 
-from fpdf import FPDF
+from fpdf2 import FPDF
 
 logger = logging.getLogger(__name__)
 

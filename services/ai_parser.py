@@ -2,6 +2,7 @@ import json
 import logging
 import re
 import httpx
+from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 import google.generativeai as genai
 
@@ -86,26 +87,17 @@ async def _parse_with_gemini(text: str) -> dict | None:
 
 
 async def _parse_with_claude(text: str) -> dict | None:
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": config.ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": config.ANTHROPIC_MODEL,
-                "max_tokens": 300,
-                "system": SYSTEM_PROMPT,
-                "messages": [{"role": "user", "content": text}],
-            },
-            timeout=30.0,
-        )
-        response.raise_for_status()
-        data = response.json()
-        content = data["content"][0]["text"].strip()
-        return _clean_json_response(content)
+    client = AsyncAnthropic(api_key=config.ANTHROPIC_API_KEY)
+    response = await client.messages.create(
+        model=config.ANTHROPIC_MODEL,
+        max_tokens=300,
+        system=SYSTEM_PROMPT,
+        messages=[
+            {"role": "user", "content": text}
+        ],
+    )
+    content = response.content[0].text.strip()
+    return _clean_json_response(content)
 
 
 def _clean_json_response(content: str) -> dict | None:
@@ -200,16 +192,16 @@ async def _tax_advice_gemini(prompt: str) -> str:
 
 
 async def _tax_advice_claude(prompt: str) -> str:
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={"x-api-key": config.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json"},
-            json={"model": config.ANTHROPIC_MODEL, "max_tokens": 1000, "system": TAX_SYSTEM_PROMPT, "messages": [{"role": "user", "content": prompt}]},
-            timeout=30.0,
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["content"][0]["text"]
+    client = AsyncAnthropic(api_key=config.ANTHROPIC_API_KEY)
+    response = await client.messages.create(
+        model=config.ANTHROPIC_MODEL,
+        max_tokens=1000,
+        system=TAX_SYSTEM_PROMPT,
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+    )
+    return response.content[0].text
 
 
 def _fallback_tax_advice(summary: dict) -> str:
