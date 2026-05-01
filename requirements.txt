@@ -3,7 +3,8 @@ sqlalchemy>=2.0.0
 asyncpg
 fpdf2
 openai
-apscheduleraiohttp
+apscheduler
+aiohttp
 httpx
 python-dotenv
 alembic
